@@ -1,0 +1,70 @@
+data:
+  metadata_path: "data/processed/processed_metadata.csv"
+  image_root: "images"                 # processed_metadata.csv의 image_path("render/train/xxx.png")가 이 경로 기준 상대경로임
+  stats_path: "data/processed/stats.json"
+
+split:
+  val_ratio: 0.10                      # train 중 validation으로 떼어낼 비율
+  seed: 42                             # train/valid 분할 재현성용 고정 시드
+
+image:
+  size: 224
+  # ImageNet 사전학습 backbone(ResNet/EfficientNet 등) 사용을 전제로 한 정규화 값.
+  # 추후 backbone을 from-scratch로 바꾸면 분자 이미지 자체 통계로 교체 권장.
+  normalize_mean: [0.485, 0.456, 0.406]
+  normalize_std: [0.229, 0.224, 0.225]
+
+augmentation:
+  horizontal_flip_p: 0.5
+  rotate_limit: 15
+  rotate_p: 0.5
+  brightness_contrast_p: 0.3
+
+dataloader:
+  batch_size: 32
+  num_workers: 4
+  shuffle:
+    train: true
+    valid: false
+    test: false
+
+labels:
+  # STEP3 스펙이 지정한 Label Vector 순서 (STEP2 CSV 컬럼 순서와 다름에 주의)
+  order: ["Tg", "Density", "FFV", "Tc", "Rg"]
+
+model:
+  name: "resnet18"
+  pretrained: true
+  dropout: 0.3
+
+loss:
+  name: "mse"                          # "mse" | "mae" | "huber"
+  huber_delta: 1.0
+
+scheduler:
+  name: "cosine"                       # 현재는 "cosine"만 지원, factory로 확장 가능
+  t_max: 30                            # 보통 training.epochs와 동일하게 설정
+  eta_min: 0.000001
+
+training:
+  epochs: 30
+  learning_rate: 0.0001
+  weight_decay: 0.00001
+  grad_clip_norm: 1.0
+  amp: true                            # GPU(cuda) 없으면 Trainer가 자동으로 무시
+  early_stopping:
+    patience: 5
+    min_delta: 0.0001
+  checkpoint_dir: "training/checkpoints"
+  log_dir: "runs"
+  seed: 42
+
+output:
+  learning_curve_path: "reports/learning_curve.png"
+  predictions_path: "reports/predictions.csv"
+
+
+k_fold:
+  enabled: false
+  n_splits: 5
+  shuffle: true

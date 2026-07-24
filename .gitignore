@@ -1,0 +1,25 @@
+
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtual Environment
+polymer_env/
+.venv/
+venv/
+
+# Generated Images
+images/
+
+# Training Outputs
+runs/
+checkpoints/
+*.pth
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

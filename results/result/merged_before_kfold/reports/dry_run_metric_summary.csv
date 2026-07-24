@@ -1,0 +1,3 @@
+run_id,epoch,train_loss,validation_loss,validation_mae,validation_rmse,validation_r2,learning_rate
+dry_run_2026-07-23,1,0.85965514,1.54046082,0.99319124,1.15801477,-0.72512013,0.00010000
+dry_run_2026-07-23,2,0.99007964,0.64444023,0.76805848,0.85400951,-0.07782026,0.00005050
