@@ -1,25 +1,28 @@
 
+cat > .gitignore << 'EOF'
+# 데이터 (원본에서 재생성 가능)
+data/raw/
+data/processed/
+data/processed_merged/
+data/processed_baseline/
+images/
+
+# 학습 산출물 (용량 크고 재생성 가능)
+*.pth
+*.pt
+checkpoints/
+results/
+runs/
+experiments/
 
 # Python
 __pycache__/
-*.py[cod]
-
-# Virtual Environment
-polymer_env/
+*.pyc
 .venv/
 venv/
 
-# Generated Images
-images/
-
-# Training Outputs
-runs/
-checkpoints/
-*.pth
-
-# VS Code
-.vscode/
-
-# OS
+# 기타
 .DS_Store
-Thumbs.db
+*.log
+EOF
+polymer_env/

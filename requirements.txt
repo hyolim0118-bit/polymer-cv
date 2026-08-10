@@ -1,0 +1,21 @@
+# torch/torchvision은 GPU 드라이버(CUDA 버전)에 따라 index-url이 달라서
+# 이 파일로 한 번에 설치하지 말고 아래 명령을 따로 실행하세요:
+#
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+#
+# (RTX 4090 / driver 570.x 기준 cu128. 다른 GPU/드라이버면 버전 확인 필요)
+#
+# 그 다음 이 requirements.txt로 나머지를 설치:
+#
+#   pip install -r requirements.txt
+
+pandas
+numpy
+scikit-learn
+pyyaml
+opencv-python-headless
+albumentations
+matplotlib
+rdkit
+tensorboard
+optuna
