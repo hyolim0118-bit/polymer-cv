@@ -19,7 +19,7 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import KFold
+from sklearn.model_selection import GroupKFold
 from torch.utils.data import DataLoader
 
 from datasets.dataset import LABEL_ORDER, PolymerDataset, compute_fold_stats
@@ -107,19 +107,28 @@ def run_kfold(config: dict) -> List[Dict[str, float]]:
     # K-Fold는 valid를 미리 떼어두지 않고 "train" split 전체를 K개로 회전시켜 사용한다.
     pool_df = full_metadata[full_metadata["split"] == "train"].reset_index(drop=True)
 
-    kfold = KFold(
-        n_splits=kfold_cfg["n_splits"],
-        shuffle=kfold_cfg.get("shuffle", True),
-        random_state=config["training"]["seed"],
-    )
+    # 같은 polymer가 train/valid fold에 동시에 들어가는 걸 막기 위해 plain KFold
+    # 대신 GroupKFold를 사용한다 (STEP6.5 설계 원칙). 그룹 키는 raw SMILES가 아니라
+    # canonical_smiles를 쓴다 — 방향환 표기 순서 등이 달라 문자열은 다르지만
+    # 같은 분자인 경우를 raw SMILES 기준으로는 못 걸러내기 때문이다.
+    kfold = GroupKFold(n_splits=kfold_cfg["n_splits"])
+    groups = pool_df["canonical_smiles"]
 
     fold_results: List[Dict[str, float]] = []
 
-    for fold_idx, (train_idx, valid_idx) in enumerate(kfold.split(pool_df), start=1):
+    for fold_idx, (train_idx, valid_idx) in enumerate(kfold.split(pool_df, groups=groups), start=1):
         logger.info("========== Fold %d/%d 시작 ==========", fold_idx, kfold_cfg["n_splits"])
 
         train_fold_df = pool_df.iloc[train_idx].reset_index(drop=True)
         valid_fold_df = pool_df.iloc[valid_idx].reset_index(drop=True)
+
+        # Data Leakage 방지 검증: 같은 분자(canonical_smiles)가 train/valid에
+        # 동시에 있으면 즉시 중단
+        overlap = set(train_fold_df["canonical_smiles"]) & set(valid_fold_df["canonical_smiles"])
+        assert not overlap, (
+            f"[Fold {fold_idx}] data leakage 감지: train/valid에 동시에 존재하는 "
+            f"분자(canonical_smiles)가 {len(overlap)}개 있습니다 (예시: {list(overlap)[:5]})."
+        )
         train_loader, valid_loader = _build_fold_loaders(train_fold_df, valid_fold_df, config)
 
         # Fold마다 새로운 Model 생성

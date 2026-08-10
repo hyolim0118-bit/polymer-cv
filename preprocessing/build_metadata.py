@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import pandas as pd
+from rdkit import Chem
 from tqdm import tqdm
 
 from preprocessing.mol_to_image import render_mol_to_png
@@ -30,6 +31,8 @@ from preprocessing.smiles_to_mol import parse_smiles
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
+# Metadata CSV column order follows the source/submission schema. Training reconstructs
+# label vectors by datasets.dataset.LABEL_ORDER (column name), so this does not affect it.
 LABEL_COLUMNS: List[str] = ["Tg", "FFV", "Tc", "Density", "Rg"]
 
 # 외부 보강 데이터: (파일명, {외부 CSV 컬럼명: LABEL_COLUMNS 중 대응 컬럼명})
@@ -180,6 +183,10 @@ def process_split(
             "id": sample_id,
             "image_path": str(image_path.relative_to(image_dir.parent)),
             "split": split,
+            "SMILES": smiles,
+            # 표기(방향환 순서 등)만 다른 동일 분자를 GroupKFold에서 하나의
+            # group으로 묶기 위한 정규화된 SMILES.
+            "canonical_smiles": Chem.MolToSmiles(mol),
         }
 
         # 4단계: 물성 5개 각각에 대해 (원본값, 정규화값, 결측마스크) 3종 컬럼 생성

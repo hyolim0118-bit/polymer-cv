@@ -1,0 +1,43 @@
+hpo:
+  enabled: true
+  search_fold: 0                 # Search Stage(Round1/2) 모두 이 fold 하나만 사용
+
+  round1:
+    n_trials: 18
+    storage: "sqlite:///experiments/optuna/round1_study.db"
+    output_dir: "experiments/optuna/search_round1"
+    search_space:
+      learning_rate: {type: loguniform, low: 1e-5, high: 1e-3}
+      weight_decay:  {type: loguniform, low: 1e-6, high: 1e-2}
+      dropout:       {type: categorical, choices: [0.2, 0.3, 0.4]}
+      batch_size:    {type: categorical, choices: [16, 32, 64]}
+
+  round2:
+    n_trials: 15
+    storage: "sqlite:///experiments/optuna/round2_study.db"
+    output_dir: "experiments/optuna/search_round2"
+    # round1 결과를 보고 범위를 좁혀서 직접 채워 넣는 부분 (예시 값)
+    search_space:
+      learning_rate: {type: loguniform, low: 3e-5, high: 2e-4}
+      weight_decay:  {type: loguniform, low: 1e-5, high: 1e-3}
+      dropout:       {type: categorical, choices: [0.2, 0.3]}
+      batch_size:    {type: categorical, choices: [32]}
+
+  fixed:
+    # training/config.yaml의 실제 키 이름을 사용한다.
+    epochs: 30
+    amp: true
+
+  checkpoints:
+    save_all_checkpoints: false   # true로 바꾸면 모든 trial의 checkpoint 보존
+
+  visualization:
+    enabled: true
+    history_plot: "experiments/optuna/history_{round}.png"
+    importance_plot: "experiments/optuna/importance_{round}.png"
+
+confirmation:
+  run_after_search: true
+  n_splits: 5
+  output_dir: "experiments/optuna/confirmation"
+  best_trial_yaml: "experiments/optuna/best_trial.yaml"

@@ -1,0 +1,8 @@
+params:
+  epochs: 1
+  amp: false
+  learning_rate: 5.6115164153345e-05
+  weight_decay: 0.006351221010640704
+  dropout: 0.2
+  batch_size: 64
+val_MAE: 1.740408182144165

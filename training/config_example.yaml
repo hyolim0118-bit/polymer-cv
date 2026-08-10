@@ -1,0 +1,11 @@
+model:
+  backbone: resnet18        # resnet18 | efficientnet_b0 (향후: convnext_tiny, swin_t)
+  pretrained: true
+  freeze_backbone: false
+
+head:
+  type: multitask
+  properties: [Tg, Density, FFV, Tc, Rg]
+
+logging:
+  record_backbone_meta: true

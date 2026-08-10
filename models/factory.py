@@ -13,7 +13,8 @@ from typing import Callable, Dict, Tuple
 import torch
 from torch import Tensor, nn
 
-from models.multitask_head import MultiTaskHead
+from models.efficientnet import EfficientNetB0Backbone
+from models.head.multitask_head import MultiTaskHead
 from models.resnet import ResNet18Backbone
 
 logger = logging.getLogger(__name__)
@@ -32,11 +33,25 @@ def _build_resnet18(pretrained: bool) -> Tuple[nn.Module, int]:
     return backbone, backbone.feature_dim
 
 
+def _build_efficientnet_b0(pretrained: bool) -> Tuple[nn.Module, int]:
+    """efficientnet_b0 backbone 인스턴스와 feature 차원을 반환한다.
+
+    Args:
+        pretrained: ImageNet 사전학습 가중치 사용 여부.
+
+    Returns:
+        (backbone, feature_dim) 튜플.
+    """
+    backbone = EfficientNetB0Backbone(pretrained=pretrained)
+    return backbone, backbone.feature_dim
+
+
 # model_name -> (pretrained) -> (backbone, feature_dim) 생성 함수 레지스트리.
-# 향후 "efficientnet_b0" 같은 backbone을 추가하려면 이 딕셔너리에
-# 생성 함수만 추가하면 되고, build_model 로직은 변경할 필요가 없다.
+# 향후 다른 backbone을 추가하려면 이 딕셔너리에 생성 함수만 추가하면 되고,
+# build_model 로직은 변경할 필요가 없다.
 _BACKBONE_REGISTRY: Dict[str, Callable[[bool], Tuple[nn.Module, int]]] = {
     "resnet18": _build_resnet18,
+    "efficientnet_b0": _build_efficientnet_b0,
 }
 
 
