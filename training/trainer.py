@@ -30,7 +30,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from evaluation.metrics import compute_metrics
-from losses.loss import build_loss
+from losses.factory import LossFactory
 from training.scheduler import build_scheduler
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -140,9 +140,7 @@ class Trainer:
             weight_decay=train_cfg["weight_decay"],
         )
         self.scheduler = build_scheduler(self.optimizer, config)
-        self.criterion = build_loss(
-            name=config["loss"]["name"], huber_delta=config["loss"].get("huber_delta", 1.0)
-        )
+        self.criterion = LossFactory.build(config, property_names=self.label_names)
 
         self.amp_enabled = bool(train_cfg.get("amp", True)) and self.device.type == "cuda"
         if train_cfg.get("amp", True) and not self.amp_enabled:

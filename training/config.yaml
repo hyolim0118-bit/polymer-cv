@@ -38,9 +38,13 @@ model:
   dropout: 0.3
 
 loss:
-  name: "mse"                          # "mse" | "mae" | "huber"
-  huber_delta: 1.0
-
+  element_loss:
+    name: mse
+    params: {}
+  weighting:
+    name: uniform
+  reduction: mean
+  
 scheduler:
   name: "cosine"                       # 현재는 "cosine"만 지원, factory로 확장 가능
   t_max: 30                            # 보통 training.epochs와 동일하게 설정
@@ -62,3 +66,7 @@ training:
 output:
   learning_curve_path: "reports/learning_curve.png"
   predictions_path: "reports/predictions.csv"
+
+k_fold:
+  n_splits: 5
+  shuffle: true
