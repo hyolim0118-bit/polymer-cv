@@ -55,10 +55,10 @@ ROUND1_N_TRIALS = 18
 
 # Round2: round1 결과 보고 이 부분을 직접 좁혀서 수정 후 실행
 ROUND2_SPACE = {
-    "learning_rate": {"low": 1e-5, "high": 1e-3, "log": True},  # <- round1 결과 보고 좁히기
-    "weight_decay": {"low": 1e-6, "high": 1e-2, "log": True},   # <- round1 결과 보고 좁히기
-    "dropout": {"choices": [0.2, 0.3, 0.4]},                     # <- round1 결과 보고 좁히기
-    "batch_size": {"choices": [16, 32, 64]},                     # <- round1 결과 보고 좁히기
+    "learning_rate": {"low": 1e-4, "high": 1e-3, "log": True},
+    "weight_decay": {"low": 1e-6, "high": 1e-4, "log": True},
+    "dropout": {"choices": [0.2]},
+    "batch_size": {"choices": [64]},
 }
 ROUND2_N_TRIALS = 15
 
