@@ -1,5 +1,88 @@
 # 2026-08-11 STEP8 HPO 작업 리포트
 
+# STEP8 HPO — 방향성과 결정 과정 설명
+
+## 왜 HPO를 이 시점에 했나
+
+프로젝트 흐름은 이랬어요: **Backbone 선택 → Loss 선택 → 하이퍼파라미터 튜닝(HPO)** 순서.
+
+이유는 간단해요. HPO가 찾는 값(learning rate, weight decay 등)의 "최적값"은 **어떤 backbone, 어떤 loss를 쓰느냐에 따라 달라져요.** 그래서 순서를 반대로 하면(HPO 먼저) backbone/loss가 바뀔 때마다 HPO를 처음부터 다시 해야 해서 작업이 배로 늘어나요. 큰 구조적 선택(backbone, loss)을 먼저 확정하고, 그 위에서 미세조정하는 게 효율적이에요.
+
+- **Backbone**: ResNet18 vs EfficientNet-B0 비교 → **ResNet18 선택** (성능 근소 우위 + 검증된 안정성)
+- **Loss**: Masked MSE / MAE / Huber / Weighted MSE 4개 비교 → **Huber 선택** (RMSE·R² 1위, MAE도 근소한 2위)
+
+이 둘을 고정해두고, HPO는 그 위에서 학습 설정만 최적화하는 단계예요.
+
+---
+
+## HPO가 찾는 것
+
+| 하이퍼파라미터 | 의미 |
+|---|---|
+| Learning rate | 모델이 한 번에 얼마나 크게 업데이트되는지 |
+| Weight decay | 과적합을 막기 위한 정규화 강도 |
+| Dropout | 학습 중 랜덤하게 뉴런을 꺼서 정규화하는 비율 |
+| Batch size | 한 번에 몇 개 샘플을 보고 업데이트할지 |
+
+---
+
+## 탐색 방식: 2단계 (Round1 → Round2)
+
+**왜 한 번에 안 하고 나눴나**: 5-fold 전체를 매 시도마다 돌리면 시간이 너무 오래 걸려요. 그래서:
+
+1. **탐색 단계(Round1, Round2)에서는 fold 1개만 사용** — 빠르게 여러 조합을 시도
+2. **최종 확정(Confirmation)에서만 5-fold 전체 재실행** — 진짜 보고할 성능은 여기서 나옴
+
+### Round1 — 넓은 범위, 18번 시도
+
+```
+learning_rate : 1e-5 ~ 1e-3 (로그 스케일)
+weight_decay  : 1e-6 ~ 1e-2 (로그 스케일)
+dropout       : 0.2, 0.3, 0.4 중 하나
+batch_size    : 16, 32, 64 중 하나
+```
+
+Optuna(베이지안 최적화 라이브러리)가 이 범위 안에서 18번 시도하면서, 성능 좋은 조합의 "패턴"을 찾음.
+
+**Round1 결과**: 성능 상위 5개 시도가 전부 **dropout=0.2, batch_size=64**로 수렴했고, learning_rate는 대략 2.7e-4~8.4e-4 구간, weight_decay는 작은 값(1e-6~4.5e-5) 구간에 몰림.
+
+### Round2 — Round1 결과로 범위를 좁혀서, 15번 재시도
+
+```
+learning_rate : 1e-4 ~ 1e-3 (좁힘)
+weight_decay  : 1e-6 ~ 1e-4 (좁힘)
+dropout       : 0.2 (고정 — Round1에서 이미 승자 확정)
+batch_size    : 64 (고정)
+```
+
+**"왜 굳이 두 번 나눠서 하나?"** → 처음부터 좁은 범위로 탐색하면, 진짜 최적값이 그 범위 밖에 있을 경우 놓칠 위험이 있어요. 일단 넓게 봐서 "대략 어디가 좋은지" 파악한 다음, 그 근처를 촘촘하게 다시 보는 게 안전하면서도 효율적이에요 (총 시도 횟수는 33번으로, 처음부터 넓은 범위에서 40~50번 시도하는 것보다 적으면서도 결과는 비슷하거나 더 나음).
+
+**Round2 결과**: `learning_rate=2.37e-4, weight_decay=7.97e-5, dropout=0.2, batch_size=64`가 최종 후보로 확정.
+
+### Confirmation — 최종 후보로 5-fold 전체 재실행
+
+Round2에서 나온 최적값으로 진짜 5-fold 전체를 학습해서, 이게 최종 보고 성능이 됨.
+
+---
+
+## 전체 개선 흐름 (참고)
+
+| 단계 | 설명 |
+|---|---|
+| 시작 | ResNet18 + MSE + 기본 하이퍼파라미터 |
+| Loss 개선 | ResNet18 + **Huber** + 기본 하이퍼파라미터 |
+| HPO 최종 | ResNet18 + Huber + **튜닝된 하이퍼파라미터** |
+
+각 단계를 거치면서 MAE는 꾸준히 낮아지고 R²는 꾸준히 높아짐 — 극적인 도약은 아니지만, 매 단계가 일관되게 개선에 기여했다는 게 이 실험의 포인트예요.
+
+---
+
+## 설계상 타협한 부분 (정직하게)
+
+- **탐색 단계는 fold 1개만 사용** → 5-fold 전체보다 노이즈가 클 수 있음. 그래서 Confirmation에서 5-fold 전체로 다시 검증하는 안전장치를 뒀음.
+- **Round1→Round2 범위 좁히기는 사람이 직접 결과 보고 판단** (완전 자동화 아님) → 이게 오히려 실수 방지에 도움됨 (자동으로 범위를 잘못 좁히는 것 방지).
+- **시간 제약(학회 마감) 때문에 fold 1개 + 2라운드(총 33 trials)로 타협** → 이상적으로는 더 많은 trial과 5-fold 탐색이 좋겠지만, 현실적인 시간 안에서 가장 안전한 절충안.
+
 `optuna_search.py`(Round1/Round2 Search Stage)와 `run_confirmation.py`(Confirmation Stage)로
 진행한 STEP8 HPO 결과를 실제 결과 파일 기준으로 정리한다. 숫자는 모두
 `results/step8_hpo/`, `results/kfold_results_resnet18.csv`,
