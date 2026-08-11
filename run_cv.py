@@ -20,7 +20,10 @@ from training.validate import predict_one_fold                       # 기존 va
 
 
 PROPERTIES = ["Tg", "Density", "FFV", "Tc", "Rg"]
-GROUP_COL = "SMILES"
+# raw SMILES가 아니라 canonical_smiles를 그룹 키로 쓴다 — 방향환 표기 순서 등이
+# 달라 문자열은 다르지만 같은 분자인 경우를 raw SMILES 기준으로는 못 걸러내기
+# 때문 (training/training real/cross_validation.py와 동일한 정책).
+GROUP_COL = "canonical_smiles"
 
 
 def run_training(fold_id, train_idx, val_idx, fold_stats, fold_dir):

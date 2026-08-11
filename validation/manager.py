@@ -47,7 +47,9 @@ class ValidationManager:
         properties : list of str
             예측 대상 property 목록 (Tg, FFV, Tc, Density, Rg 등)
         group_col : str
-            그룹 키 컬럼 (SMILES / canonical SMILES)
+            그룹 키 컬럼. 반드시 canonical_smiles를 사용한다 (raw SMILES는
+            방향환 표기 순서 등으로 같은 분자가 다른 문자열이 될 수 있어
+            leakage를 놓칠 수 있음).
         split_strategy : SplitStrategy
             현재는 GroupKFoldStrategy를 주입
         output_dir : str or Path

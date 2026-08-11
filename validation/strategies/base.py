@@ -27,7 +27,9 @@ class SplitStrategy(ABC):
         df : pd.DataFrame
             전체 학습 데이터 (STEP3 load_split_dataframes 결과)
         group_col : str
-            그룹 키 컬럼명 (SMILES 또는 canonical SMILES)
+            그룹 키 컬럼명. raw SMILES는 방향환 표기 순서 등으로 같은 분자가
+            다른 문자열이 될 수 있어 leakage를 놓칠 수 있으므로, 반드시
+            canonical_smiles(RDKit Chem.CanonSmiles 기준)를 사용해야 한다.
 
         Yields
         ------

@@ -1,8 +1,10 @@
 """
 GroupKFoldStrategy
 -------------------
-polymer identity(SMILES / canonical SMILES) 기준으로 그룹을 나눠
-같은 polymer가 train/val에 동시에 들어가지 않도록 fold를 생성한다.
+polymer identity(canonical_smiles) 기준으로 그룹을 나눠 같은 polymer가
+train/val에 동시에 들어가지 않도록 fold를 생성한다. group_col은 반드시
+canonical_smiles여야 한다 — raw SMILES는 방향환 표기 순서 등으로 같은
+분자가 다른 문자열이 될 수 있어 leakage를 놓칠 수 있다.
 """
 
 from typing import Iterator, Tuple

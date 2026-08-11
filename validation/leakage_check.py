@@ -29,7 +29,8 @@ def check_no_leakage(
     train_idx, val_idx : array-like
         해당 fold의 train/val 인덱스
     group_col : str
-        그룹 키 컬럼 (SMILES 등)
+        그룹 키 컬럼. raw SMILES가 아니라 canonical_smiles여야 한다 (표기
+        차이만 있는 동일 분자는 raw SMILES 기준으로 걸러지지 않는다).
     fold_id : int
         에러 메시지에 표시할 fold 번호
 
