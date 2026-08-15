@@ -13,9 +13,10 @@ Property별 Grad-CAM attention이 화학적으로 의미 있는 부분(작용기
 실행: python gradcam_chem_analysis.py
 
 출력:
-  outputs/gradcam_chem_quant.csv     - property별 정량 결과 표
-  outputs/gradcam_chem_summary.md    - 논문에 바로 삽입 가능한 markdown 표
-  outputs/gradcam_chem_panel_<prop>.png - property별 대표 샘플 3장 시각화 패널
+  outputs/gradcam_chem_quant_<tag>.csv     - property별 정량 결과 표
+  outputs/gradcam_chem_summary_<tag>.md    - 논문에 바로 삽입 가능한 markdown 표
+  outputs/gradcam_chem_panel_<prop>_<tag>.png - property별 대표 샘플 시각화 패널
+  (<tag>는 layer/배경마스킹/TTA 설정을 담은 식별자, 재현성을 위해 파일명에 포함)
 """
 
 import argparse

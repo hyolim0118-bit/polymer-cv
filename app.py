@@ -49,7 +49,6 @@ OOF_MAE = {
     "Rg": 1.716363617641058,
 }
 
-
 # 자주 쓰이는 고분자 이름 -> 반복단위 SMILES (PubChem에는 대부분 없는 정보라 자체 보유)
 # 이름 매칭은 대소문자/공백 무시. 필요하면 계속 추가.
 COMMON_POLYMER_SMILES = {
@@ -70,6 +69,13 @@ COMMON_POLYMER_SMILES = {
     "polyethyleneterephthalate": "*OCCOC(=O)c1ccc(C(=O)*)cc1",
     "pmma": "*CC(C)(C(=O)OC)*",
     "polymethylmethacrylate": "*CC(C)(C(=O)OC)*",
+}
+
+# 라이브 시연용 검증된 SMILES 드롭다운 (오타 방지, 안전한 발표 데모용)
+# TODO: 실제 검증된 랩실 SMILES로 최종 교체
+EXAMPLE_SMILES = {
+    "PA66 (nylon 6,6)": "*NCCCCCCNC(=O)CCCCC(=O)*",
+    "PPE (2,6-dimethyl)": "*Oc1cc(C)c(*)cc1C",
 }
 
 
@@ -113,7 +119,7 @@ def resolve_input_to_smiles(text: str):
     if parse_smiles(text) is not None:
         return text, None
 
-    # 2) SMILES 파싱 실패 -> 화합물 이름으로 간주하고 조회
+    # 2) SMILES 파싱 실패 -> 화합물 이름으로 간주하고 자체 사전 -> PubChem 순으로 조회
     resolved = name_to_smiles(text)
     if resolved is not None:
         return resolved, f"'{text}' -> SMILES 자동 변환: {resolved}"
@@ -354,6 +360,10 @@ with gr.Blocks(title="Polymer Property Predictor") as demo:
 
     with gr.Row():
         with gr.Column(scale=1):
+            example_dropdown = gr.Dropdown(
+                choices=list(EXAMPLE_SMILES.keys()),
+                label="검증된 예시 (라이브 시연용, 안전)",
+            )
             smiles_input = gr.Textbox(
                 label="SMILES 또는 화합물 이름 입력",
                 placeholder="예: *NCCCCCCNC(=O)* 또는 polyethylene 등",
@@ -366,6 +376,10 @@ with gr.Blocks(title="Polymer Property Predictor") as demo:
 
     gradcam_plot = gr.Plot(label="Grad-CAM (property별)")
 
+    def on_example_select(choice):
+        return EXAMPLE_SMILES.get(choice, "")
+
+    example_dropdown.change(on_example_select, inputs=example_dropdown, outputs=smiles_input)
     predict_btn.click(predict, inputs=smiles_input, outputs=[mol_image, pred_text, gradcam_plot])
 
 

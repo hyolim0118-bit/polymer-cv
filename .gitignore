@@ -4,23 +4,20 @@ data/processed/
 data/processed_merged/
 data/processed_baseline/
 images/
-
 # 학습 산출물 (용량 크고 재생성 가능)
 *.pth
 *.pt
 checkpoints/
 runs/
 experiments/
-
 # Python
 __pycache__/
 *.pyc
 .venv/
 venv/
-
 # 기타
 .DS_Store
 *.log
-
 polymer_env/
 *.tfevents.*
+results/step8_hpo/confirmation_logs/
