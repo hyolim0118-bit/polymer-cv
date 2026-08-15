@@ -26,6 +26,7 @@ spec.loader.exec_module(cross_validation)
 
 N_SPLITS = 5
 CHECKPOINT_DIR = Path("results/step8_hpo/confirmation_checkpoints")
+#CHECKPOINT_DIR = Path("results/result/merged_after_kfold/checkpoints")
 FOLD_CHECKPOINT_TEMPLATE = "fold{fold_id}_best.pth"  # fold_id: 1~5
 
 # STEP7(backbone)/STEP9.4(loss) 결과로 확정된 값 — 이 스크립트들은 항상 이 조합으로 동작

@@ -23,3 +23,4 @@ venv/
 *.log
 
 polymer_env/
+*.tfevents.*
